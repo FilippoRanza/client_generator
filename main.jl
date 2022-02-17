@@ -34,7 +34,8 @@ function main(config::Config)
 
     save_results(config.result_file, config.result_key, clients)
     if config.plot
-        contour(1:config.map_size, 1:config.map_size, clients)
+        x, y = size(clients)
+        contour(1:x, 1:y, clients)
     end
 end
 
