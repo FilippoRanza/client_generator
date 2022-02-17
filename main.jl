@@ -1,12 +1,12 @@
 using Plots
-
+using YAML
 using Configurations
 
 include("gen_clients.jl")
 include("load_data.jl")
 include("save_results.jl")
 
-struct Config 
+@option struct Config 
     map_size::Int64
     line_id::String
     day_id::String
@@ -17,6 +17,7 @@ struct Config
     data_file::String
     result_file::String
     result_key::String
+    plot::Bool
 end
 
 function main(config::Config) 
@@ -32,7 +33,9 @@ function main(config::Config)
     close_data(data)
 
     save_results(config.result_file, config.result_key, clients)
-    contour(1:config.map_size, 1:config.map_size, clients)
+    if config.plot
+        contour(1:config.map_size, 1:config.map_size, clients)
+    end
 end
 
 conf_dict = YAML.load_file("config.yml"; dicttype=Dict{String, Any})
