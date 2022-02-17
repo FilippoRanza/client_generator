@@ -1,17 +1,40 @@
 using Plots
 
+using Configurations
+
 include("gen_clients.jl")
 include("load_data.jl")
 include("save_results.jl")
 
+struct Config 
+    map_size::Int64
+    line_id::String
+    day_id::String
+    stat_id::String
+    min_var::Float64
+    max_var::Float64
+    scale::Int64
+    data_file::String
+    result_file::String
+    result_key::String
+end
 
-data = load_data("lausanne-bus-data.hdf5")
+function main(config::Config) 
+    
+    data = load_data(config.data_file)
 
-map_size = 150;
-counts = get_data(data, "13", "sw-mon", "avg")
-clients = generate_clients(counts, map_size, .1, .5, 2)
-println(sum(clients), " ", length(clients[clients .> 0]))
-close_data(data)
-save_results("clients.hdf5", "line-13", clients)
-contour(1:map_size, 1:map_size, clients)
+    counts = get_data(
+        data, config.line_id, config.day_id, config.stat_id)
+    clients = generate_clients(
+        counts, config.map_size, config.min_var,
+        config.max_var, config.scale)
 
+    close_data(data)
+
+    save_results(config.result_file, config.result_key, clients)
+    contour(1:config.map_size, 1:config.map_size, clients)
+end
+
+conf_dict = YAML.load_file("config.yml"; dicttype=Dict{String, Any})
+config = from_dict(Config, conf_dict)
+main(config)
