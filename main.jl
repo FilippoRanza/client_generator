@@ -5,6 +5,7 @@ using Configurations
 include("gen_clients.jl")
 include("load_data.jl")
 include("save_results.jl")
+include("build_instance.jl")
 
 @option struct Config 
     map_size::Int64
@@ -18,6 +19,27 @@ include("save_results.jl")
     result_file::String
     result_key::String
     plot::Bool
+    csr_mean::Float64
+    csr_var::Float64
+    client_mean::Float64
+    client_var::Float64
+end
+
+function get_log_normal_params(μ, σ)
+    x = log(μ^2 / √(μ^2 + σ^2))
+    y = log(1 + σ^2 / μ^2)
+    x, y
+end
+
+function log_normal_factory(μ, σ)
+    x, y = get_log_normal_params(μ, σ)
+    LogNormal(x, y)
+end
+
+function factory_distributions(config::Config)
+    d₁ = log_normal_factory(config.csr_mean, config.csr_var)
+    d₂ = log_normal_factory(config.client_mean, config.client_var)
+    d₁, d₂
 end
 
 function main(config::Config) 
@@ -32,7 +54,9 @@ function main(config::Config)
 
     close_data(data)
 
-    save_results(config.result_file, config.result_key, clients)
+    d₁, d₂ = factory_distributions(config)
+    instance = build_instance(clients, d₁, d₂)
+    save_results(config.result_file, config.result_key, instance)
     if config.plot
         x, y = size(clients)
         contour(1:x, 1:y, clients)
