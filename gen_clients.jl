@@ -1,10 +1,9 @@
-using Distributions
 
-
+uni_rand = (r) -> rand(Uniform(r...));
 
 function rand_hermitian(x_range, y_range, scale)
-    a = rand(x_range)
-    b = rand(y_range)
+    a = uni_rand(x_range)
+    b = uni_rand(y_range)
     m = min(a, b)
     diag_range = -m:scale:m
     c = rand(diag_range)
@@ -23,13 +22,13 @@ function generate_clients(
     x = 1:map_size;
     y = 1:map_size;
     
-    var_inter = (x) -> min_var*x:.1:max_var*x;
+    var_inter = (x) -> [min_var  max_var] .* x;
 
     clients = zeros(map_size, map_size)
     centers = rand(1:map_size, (length(counts), 2)) 
 
     for (c, μ) in zip(counts, eachrow(centers))
-        Σ = rand_hermitian(var_inter(c), var_inter(c),0.1)
+        Σ = rand_hermitian(var_inter(c), var_inter(c), 0.1)
         nd = MvNormal(μ, Σ)
         points = collapse.(rand(nd, c), scale)
         for (p1, p2) in eachcol(points)

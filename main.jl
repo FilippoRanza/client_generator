@@ -1,6 +1,9 @@
 using Plots
 using YAML
 using Configurations
+using Distributions
+
+
 
 include("gen_clients.jl")
 include("load_data.jl")
